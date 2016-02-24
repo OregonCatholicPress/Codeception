@@ -275,10 +275,6 @@ class Db extends CodeceptionModule implements DbInterface
      */
     public function haveInDatabase($table, array $data)
     {
-        ///////////////////////////////////////////////////////////////////////////////
-        ///////////////////////////////////////////////////////////////////////////////
-        ///////////////////////////////////////////////////////////////////////////////
-
         $filterData = function(array $data) {
             return array_map(function($input) { return (is_array($input)) ? $input[0] : $input; }, $data);
         };
@@ -288,7 +284,6 @@ class Db extends CodeceptionModule implements DbInterface
             foreach ($data as $val) {
                 if (is_array($val)) {
                     $sth->bindValue($i, $getPDOType($val[1], $val[0]), $val[1]);
-                    //$sth->bindValue($i, (int) $val[0], $val[1]);
                 } else {
                     $sth->bindValue($i, $val);
                 }
@@ -301,10 +296,6 @@ class Db extends CodeceptionModule implements DbInterface
         if (!$sth) { throw new \Exception("Query '$query' can't be prepared."); }
         $bindValues($data, $sth);
         $sth->execute();
-
-        ///////////////////////////////////////////////////////////////////////////////
-        ///////////////////////////////////////////////////////////////////////////////
-        ///////////////////////////////////////////////////////////////////////////////
 
         try {
             $lastInsertId = (int)$this->driver->lastInsertId($table);
