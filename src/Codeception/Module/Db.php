@@ -224,6 +224,43 @@ class Db extends Module implements DbInterface
         }
     }
 
+    /////////////////////////////////////////
+    /////// modifications ///////////////////
+    /////////////////////////////////////////
+
+    protected function getPDOType($type, $val)
+    {
+        $arr = [
+            1 => (int) $val, 
+            2 => "$val"
+        ];
+
+        return $arr[$type];
+    }
+
+    protected function filterData(array $data)
+    {   
+        return array_map( function($input) { return (is_array($input)) ? $input[0] : $input; }, $data);
+    }
+
+    protected function bindValues($data, $sth)
+    {
+        $i = 1;
+        foreach ($data as $val) {
+            if (is_array($val)) {
+                $sth->bindValue($i, $this->getPDOType($val[1], $val[0]), $val[1]);
+                //$sth->bindValue($i, (int) $val[0], $val[1]);
+            } else {
+                $sth->bindValue($i, $val);
+            }
+            $i++;
+        }
+    }
+
+    /////////////////////////////////////////
+    /////// modifications ///////////////////
+    /////////////////////////////////////////
+
     /**
      * Inserts SQL record into database. This record will be erased after the test.
      *
@@ -240,19 +277,39 @@ class Db extends Module implements DbInterface
      */
     public function haveInDatabase($table, array $data)
     {
-        $query = $this->driver->insert($table, $data);
+        //$query = $this->driver->insert($table, $data);
+        //$this->debugSection('Query', $query);
+
+        //$sth = $this->driver->getDbh()->prepare($query);
+        //if (!$sth) {
+            //$this->fail("Query '$query' can't be executed.");
+        //}
+        //$i = 1;
+        //foreach ($data as $val) {
+            //$sth->bindValue($i, $val);
+            //$i++;
+        //}
+
+        /////////////////////////////////////////
+        /////// modifications ///////////////////
+        /////////////////////////////////////////
+
+        $query = $this->driver->insert($table, $this->filterData($data));
         $this->debugSection('Query', $query);
 
         $sth = $this->driver->getDbh()->prepare($query);
         if (!$sth) {
             $this->fail("Query '$query' can't be executed.");
         }
-        $i = 1;
-        foreach ($data as $val) {
-            $sth->bindValue($i, $val);
-            $i++;
-        }
+
+        $this->bindValues($data, $sth);
+
+        /////////////////////////////////////////
+        /////// modifications ///////////////////
+        /////////////////////////////////////////
+
         $res = $sth->execute();
+
         if (!$res) {
             $this->fail(sprintf("Record with %s couldn't be inserted into %s", json_encode($data), $table));
         }
