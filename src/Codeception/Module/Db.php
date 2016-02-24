@@ -275,10 +275,36 @@ class Db extends CodeceptionModule implements DbInterface
      */
     public function haveInDatabase($table, array $data)
     {
-        $query = $this->driver->insert($table, $data);
-        $this->debugSection('Query', $query);
+        ///////////////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////////
 
-        $this->driver->executeQuery($query, array_values($data));
+        $filterData = function(array $data) {
+            return array_map(function($input) { return (is_array($input)) ? $input[0] : $input; }, $data);
+        };
+        $getPDOType = function ($type, $val) { $arr = [1 => (int) $val, 2 => "$val"]; return $arr[$type]; };
+        $bindValues = function ($data, $sth) use ($getPDOType) {
+            $i = 1;
+            foreach ($data as $val) {
+                if (is_array($val)) {
+                    $sth->bindValue($i, $getPDOType($val[1], $val[0]), $val[1]);
+                    //$sth->bindValue($i, (int) $val[0], $val[1]);
+                } else {
+                    $sth->bindValue($i, $val);
+                }
+                $i++;
+            }
+        };
+        $query = $this->driver->insert($table, $filterData($data));
+        $this->debugSection('Query', $query);
+        $sth = $this->dbh->prepare($query);
+        if (!$sth) { throw new \Exception("Query '$query' can't be prepared."); }
+        $bindValues($data, $sth);
+        $sth->execute();
+
+        ///////////////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////////
 
         try {
             $lastInsertId = (int)$this->driver->lastInsertId($table);
