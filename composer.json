@@ -54,6 +54,7 @@
     },
     "extra": {
         "branch-alias": {
+            "dev-fork": "2.1.*.x-dev"
         }
     },
     "bin":["codecept"],
