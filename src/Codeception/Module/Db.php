@@ -310,6 +310,24 @@ class Db extends CodeceptionModule implements DbInterface
         return $lastInsertId;
     }
 
+    /**
+     * Deletes an SQL record from a database.
+     *
+     * ``` php
+     * <?php
+     * $I->deleteFromDatabase('users', array('name' => 'miles'));
+     * ?>
+     * ```
+     *
+     * @param       $table
+     * @param array $data
+     *
+     */
+    public function deleteFromDatabase($table, array $data)
+    {
+        $this->driver->deleteQueryByCriteria($table, $data);
+    }
+
     private function addInsertedRow($table, array $row, $id)
     {
         $primaryKey = $this->driver->getPrimaryKey($table);
